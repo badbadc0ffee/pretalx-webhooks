@@ -1,0 +1,127 @@
+[project]
+name = "pretalx-release-hook"
+dynamic = ["version"]
+description = "Call a webhook when a schedule version is released."
+readme = "README.rst"
+license = "Apache-2.0"
+keywords = ["pretalx"]
+authors = [
+  {name = "Florian Mösch", email = "florian@moesch.org"},
+]
+maintainers = [
+  {name = "Florian Mösch", email = "florian@moesch.org"},
+]
+
+requires-python = ">=3.13"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "pretalx[dev]",
+  "build",
+  "twine",
+  "pytest",
+  "pytest-cov",
+  "pytest-django",
+  "ruff",
+]
+
+[project.entry-points."pretalx.plugin"]
+pretalx_release_hook = "pretalx_release_hook:PretalxPluginMeta"
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "pretalx_release_hook.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["pretalx*"]
+
+[tool.check-manifest]
+ignore = [".*", "justfile"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+django_find_project = false
+testpaths = "tests"
+pythonpath = ["."]
+addopts = "--cov=pretalx_release_hook --cov-report=term-missing:skip-covered --cov-config=pyproject.toml"
+
+[tool.coverage.run]
+branch = true
+relative_files = true
+source = ["pretalx_release_hook"]
+omit = []
+
+[tool.coverage.report]
+fail_under = 100
+
+
+[tool.ruff.format]
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "ANN",   
+  "ARG",   
+  "C901",  
+  "COM812",
+  "CPY",   
+  "D",     
+  "DJ001", 
+  "DJ008",
+  "E501",  
+  "EM",    
+  "FBT",   
+  "FIX",   
+  "PLR",   
+  "RET502",
+  "RET503",
+  "RUF012",
+  "RUF100",
+  "TRY003",
+]
+allowed-confusables = ["–", "'", "×"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**.py" = [
+  "DTZ",   
+  "INP001",
+  "RUF",   
+  "S",     
+  "S101",  
+  "SLF001",
+  "TRY",   
+]
+
+[tool.ruff.lint.flake8-pytest-style]
+parametrize-values-type = "tuple"
+
+[tool.ruff.lint.flake8-self]
+extend-ignore-names = ["_base_manager", "_default_manager",  "_meta"]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+section-order = ["future", "standard-library", "third-party", "pretalx", "first-party", "local-folder"]
+
+[tool.ruff.lint.isort.sections]
+pretalx = ["pretalx"]
+
+[tool.ruff.lint.pep8-naming]
+extend-ignore-names = [
+  "allDay",
+  "api_urls",
+  "EventSettings",
+  "extendMarkdown",
+  "get_allDay",
+  "orga_urls",
+  "SendMailException",
+  "setUpTestData",
+  "urls",
+]

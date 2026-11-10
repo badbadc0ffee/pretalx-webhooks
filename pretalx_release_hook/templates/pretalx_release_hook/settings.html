@@ -1,0 +1,14 @@
+{% extends "orga/base.html" %}
+{% load i18n %}
+{% block extra_title %}{% translate "Release hook" %} :: {% endblock %}
+{% block content %}
+    <h2>{% translate "Release hook" %}</h2>
+    <form method="post" autocomplete="off">
+        {% csrf_token %}
+        {{ form }}
+        <div class="submit-group">
+            <button class="btn btn-success">{% translate "Save" %}</button>
+        </div>
+    </form>
+{% endblock %}
+
