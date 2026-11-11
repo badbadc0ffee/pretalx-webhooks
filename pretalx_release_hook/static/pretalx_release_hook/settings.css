@@ -1,0 +1,5 @@
+.header-form .input-group > input:first-of-type {
+  flex: 0 0 12rem;
+  width: 12rem;
+  max-width: 12rem;
+}

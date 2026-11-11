@@ -1,14 +1,70 @@
 {% extends "orga/base.html" %}
 {% load i18n %}
-{% block extra_title %}{% translate "Release hook" %} :: {% endblock %}
+{% load static %}
+{% block extra_title %}{% translate "Release hook" %} ::
+{% endblock %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{% static "pretalx_release_hook/settings.css" %}">
+{% endblock stylesheets %}
 {% block content %}
     <h2>{% translate "Release hook" %}</h2>
     <form method="post" autocomplete="off">
         {% csrf_token %}
         {{ form }}
+        <div class="formset" data-formset data-formset-prefix="{{ header_formset.prefix }}">
+            {{ header_formset.management_form }}
+            {{ header_formset.non_form_errors }}
+            <div id="header-forms" data-formset-body>
+                {% for header_form in header_formset %}
+                    <div class="header-form form-group row" data-formset-form>
+                        {% for hidden_field in header_form.hidden_fields %}
+                            {{ hidden_field }}
+                        {% endfor %}
+                        <div class="sr-only">{{ header_form.DELETE }}</div>
+                        {{ header_form.non_field_errors }}
+                        <label class="col-md-3 col-form-label" for="{{ header_form.name.id_for_label }}">
+                            {% translate "HTTP Header" %}
+                            <span class="optional">{% translate "Optional" %}</span>
+                        </label>
+                        <div class="col-md-9">
+                            <label
+                                class="sr-only"
+                                for="{{ header_form.name.id_for_label }}"
+                            >{{ header_form.name.label }}</label>
+                            <label
+                                class="sr-only"
+                                for="{{ header_form.value.id_for_label }}"
+                            >{{ header_form.value.label }}</label>
+                            <div class="input-group">
+                                {{ header_form.name }}
+                                {{ header_form.value }}
+                                {% if header_form.instance.pk %}
+                                    <div class="input-group-append">
+                                        <button
+                                            type="button"
+                                            class="btn btn-danger"
+                                            data-formset-delete-button
+                                            title="{% translate "Delete" %}"
+                                            aria-label="{% translate "Delete" %}"
+                                        >
+                                            <i class="fa fa-trash" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% for error in header_form.name.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                            {% for error in header_form.value.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
         <div class="submit-group">
             <button class="btn btn-success">{% translate "Save" %}</button>
         </div>
     </form>
 {% endblock %}
-

@@ -9,3 +9,11 @@ class ReleaseHookSettings(models.Model):
         max_length=10, default="POST", choices=[(v, v) for v in ("GET", "POST", "PUT")]
     )
     payload = models.TextField(blank=True, default="", verbose_name=_("Payload"))
+
+
+class ReleaseHookHeader(models.Model):
+    settings = models.ForeignKey(
+        ReleaseHookSettings, on_delete=models.CASCADE, related_name="headers"
+    )
+    name = models.CharField(max_length=255, verbose_name=_("Name"))
+    value = models.TextField(blank=True, verbose_name=_("Value"))

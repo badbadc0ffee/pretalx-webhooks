@@ -9,7 +9,8 @@ Install in the pretalx environment::
     python -m pretalx migrate
 
 Restart pretalx. Enable the plugin for the event. Open **Settings → Release hook**.
-Set the URL, GET/POST/PUT, and payload. Leave the URL empty to disable the hook.
+Set the URL, GET/POST/PUT, payload, and optional HTTP header name/value pairs.
+Leave the URL empty to disable the hook.
 
 GET ignores the payload. POST and PUT send the payload as
 UTF-8 text. JSON bodies use application/json. Other bodies use text/plain.

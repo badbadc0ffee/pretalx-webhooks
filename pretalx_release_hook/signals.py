@@ -56,7 +56,10 @@ def send_release_hook(schedule_id):
     if not config or not config.url:
         return
     try:
-        status = send_request(build_request(config.url, config.method, config.payload))
+        headers = config.headers.values_list("name", "value")
+        status = send_request(
+            build_request(config.url, config.method, config.payload, headers)
+        )
     except (ValidationError, TransportError):
         logger.warning("Release hook failed for schedule %s.", schedule_id)
         return

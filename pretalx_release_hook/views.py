@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db import transaction
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import FormView
@@ -24,7 +25,15 @@ class ReleaseHookSettingsView(EventPermissionRequired, FormView):
     def get_success_url(self):
         return self.request.path
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["header_formset"] = context["form"].header_formset
+        return context
+
     def form_valid(self, form):
-        form.save()
+        with transaction.atomic():
+            settings = form.save()
+            form.header_formset.instance = settings
+            form.header_formset.save()
         messages.success(self.request, _("Hook settings saved."))
         return super().form_valid(form)

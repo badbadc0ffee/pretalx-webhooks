@@ -7,7 +7,7 @@ from pretalx.event.models import Event
 from pretalx_release_hook.models import ReleaseHookSettings
 from pretalx_release_hook.views import ReleaseHookSettingsView
 
-from .helpers import form_data, url
+from .helpers import form_data, header_form_data, url
 
 pytestmark = pytest.mark.django_db
 
@@ -21,13 +21,34 @@ def test_settings_view_rejects_inactive_plugin(event, orga_user):
         ReleaseHookSettingsView.as_view()(request, event=event.slug)
 
 
-def test_settings_survive_reload(orga_client, event):
-    data = form_data(payload="\nreleased\n")
+def test_settings_model_is_updated(orga_client, event):
+    settings_data = form_data(payload="\nreleased\n")
+    headers = [("Authorization", "Bearer secret"), ("X-Event", "democon")]
+    data = {**settings_data, **header_form_data(*headers)}
     response = orga_client.post(url(event), data)
     assert response.status_code == 302
-    response = orga_client.get(url(event))
+
+    settings = ReleaseHookSettings.objects.get(event=event)
+    assert settings.url == settings_data["url"]
+    assert settings.method == settings_data["method"]
+    assert settings.payload == settings_data["payload"]
+    assert list(settings.headers.order_by("pk").values_list("name", "value")) == headers
+
+
+def test_settings_survive_reload(orga_client, event):
+    settings_data = form_data(payload="\nreleased\n")
+    headers = [("Authorization", "Bearer secret"), ("X-Event", "democon")]
+    data = {**settings_data, **header_form_data(*headers)}
+    response = orga_client.post(url(event), data, follow=True)
+
+    assert response.redirect_chain == [(url(event), 302)]
     form = response.context["form"]
-    assert all(form.initial[name] == value for name, value in data.items())
+    assert all(form.initial[name] == value for name, value in settings_data.items())
+    header_formset = response.context["header_formset"]
+    assert [
+        (form.initial["name"], form.initial["value"])
+        for form in header_formset.initial_forms
+    ] == headers
     assert b"Hook settings saved." in response.content
 
 
@@ -36,4 +57,15 @@ def test_unsupported_url_scheme_error_is_visible(orga_client, event):
     assert response.status_code == 200
     assert response.context["form"].errors
     assert "Enter a valid URL." in response.content.decode()
+    assert not ReleaseHookSettings.objects.exists()
+
+
+def test_invalid_header_value_error_is_visible(orga_client, event):
+    data = {
+        **form_data(),
+        **header_form_data(("Authorization", "Bearer secret\r\nX-Injected: yes")),
+    }
+    response = orga_client.post(url(event), data)
+    assert response.status_code == 200
+    assert "valid HTTP header value" in response.content.decode()
     assert not ReleaseHookSettings.objects.exists()

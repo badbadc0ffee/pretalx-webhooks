@@ -17,3 +17,26 @@ def test_get_ignores_payload():
         "body": "",
         "headers": {},
     }
+
+
+def test_custom_headers_are_added_to_request():
+    assert build_request(
+        "https://example.org/hook",
+        "POST",
+        '{"action":"released"}',
+        [("Authorization", "Bearer secret"), ("X-Event", "democon")],
+    )["headers"] == {
+        "Authorization": "Bearer secret",
+        "Content-Type": "application/json",
+        "X-Event": "democon",
+    }
+
+
+def test_custom_content_type_overrides_inferred_content_type():
+    request = build_request(
+        "https://example.org/hook",
+        "POST",
+        '{"action":"released"}',
+        [("Content-Type", "application/cloudevents+json")],
+    )
+    assert request["headers"] == {"Content-Type": "application/cloudevents+json"}
