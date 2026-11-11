@@ -1,7 +1,7 @@
 [project]
-name = "pretalx-release-hook"
+name = "pretalx-webhooks"
 dynamic = ["version"]
-description = "Call a webhook when a schedule version is released."
+description = "Call a webhook for selected pretalx event activity."
 readme = "README.rst"
 license = "Apache-2.0"
 keywords = ["pretalx"]
@@ -27,7 +27,7 @@ dev = [
 ]
 
 [project.entry-points."pretalx.plugin"]
-pretalx_release_hook = "pretalx_release_hook:PretalxPluginMeta"
+pretalx_webhooks = "pretalx_webhooks:PretalxPluginMeta"
 
 [build-system]
 build-backend = "setuptools.build_meta"
@@ -37,7 +37,7 @@ requires = ["setuptools"]
 include-package-data = true
 
 [tool.setuptools.dynamic]
-version = {attr = "pretalx_release_hook.__version__"}
+version = {attr = "pretalx_webhooks.__version__"}
 
 [tool.setuptools.packages.find]
 include = ["pretalx*"]
@@ -50,12 +50,12 @@ DJANGO_SETTINGS_MODULE = "tests.settings"
 django_find_project = false
 testpaths = "tests"
 pythonpath = ["."]
-addopts = "--cov=pretalx_release_hook --cov-report=term-missing:skip-covered --cov-config=pyproject.toml"
+addopts = "--cov=pretalx_webhooks --cov-report=term-missing:skip-covered --cov-config=pyproject.toml"
 
 [tool.coverage.run]
 branch = true
 relative_files = true
-source = ["pretalx_release_hook"]
+source = ["pretalx_webhooks"]
 omit = []
 
 [tool.coverage.report]
@@ -68,19 +68,19 @@ skip-magic-trailing-comma = true
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-  "ANN",   
-  "ARG",   
-  "C901",  
+  "ANN",
+  "ARG",
+  "C901",
   "COM812",
-  "CPY",   
-  "D",     
-  "DJ001", 
+  "CPY",
+  "D",
+  "DJ001",
   "DJ008",
-  "E501",  
-  "EM",    
-  "FBT",   
-  "FIX",   
-  "PLR",   
+  "E501",
+  "EM",
+  "FBT",
+  "FIX",
+  "PLR",
   "RET502",
   "RET503",
   "RUF012",
@@ -91,13 +91,13 @@ allowed-confusables = ["–", "'", "×"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**.py" = [
-  "DTZ",   
+  "DTZ",
   "INP001",
-  "RUF",   
-  "S",     
-  "S101",  
+  "RUF",
+  "S",
+  "S101",
   "SLF001",
-  "TRY",   
+  "TRY",
 ]
 
 [tool.ruff.lint.flake8-pytest-style]

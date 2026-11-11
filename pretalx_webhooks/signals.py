@@ -5,16 +5,15 @@ from urllib.parse import urlsplit, urlunsplit
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_scopes import scopes_disabled
 
+from pretalx.common.models.log import ActivityLog
 from pretalx.orga.signals import nav_event_settings
-from pretalx.schedule.models import Schedule
-from pretalx.schedule.signals import schedule_release
 
-from .models import ReleaseHookSettings
 from .payload import build_request, render_payload
 
 logger = logging.getLogger(__name__)
@@ -45,14 +44,10 @@ def send_request(request):
 
 
 @scopes_disabled()
-def send_release_hook(schedule_id):
-    schedule = Schedule.objects.select_related("event").filter(pk=schedule_id).first()
-    if not schedule:
+def send_webhook(event, action_type):
+    if action_type != "pretalx.schedule.release":
         return
-    event = schedule.event
-    if "pretalx_release_hook" not in event.plugin_list:
-        return
-    config = ReleaseHookSettings.objects.filter(event=event).first()
+    config = getattr(event, "webhooksettings", None)
     if not config or not config.url:
         return
     try:
@@ -62,27 +57,35 @@ def send_release_hook(schedule_id):
             build_request(config.url, config.method, payload, headers)
         )
     except (ValidationError, TransportError):
-        logger.warning("Release hook failed for schedule %s.", schedule_id)
+        logger.warning("Webhook failed for event %s.", event.slug)
         return
     if not 200 <= status < 300:
-        logger.warning(
-            "Release hook returned HTTP %s for schedule %s.", status, schedule_id
-        )
+        logger.warning("Webhook returned HTTP %s for event %s.", status, event.slug)
 
 
-@receiver(schedule_release, dispatch_uid="release_hook_schedule")
-def release(sender, schedule, **kwargs):
-    transaction.on_commit(partial(send_release_hook, schedule.pk), robust=True)
+@receiver(post_save, sender=ActivityLog, dispatch_uid="webhook_activity_log_created")
+def activity_log_created(sender, instance, created, **kwargs):
+    if not created:
+        return
+    event = instance.event
+    if not event:
+        return
+    event.refresh_from_db(fields=["plugins"])
+    if "pretalx_webhooks" not in event.plugin_list:
+        return
+    transaction.on_commit(
+        partial(send_webhook, event, instance.action_type), robust=True
+    )
 
 
-@receiver(nav_event_settings, dispatch_uid="release_hook_navigation")
+@receiver(nav_event_settings, dispatch_uid="webhook_navigation")
 def navigation(sender, request, **kwargs):
     if not request.user.has_perm("event.update_event", request.event):
         return []
-    name = "plugins:pretalx_release_hook:settings"
+    name = "plugins:pretalx_webhooks:settings"
     return [
         {
-            "label": _("Release hook"),
+            "label": _("Webhook"),
             "url": reverse(name, kwargs={"event": request.event.slug}),
             "active": request.resolver_match.view_name == name,
         }

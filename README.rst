@@ -1,14 +1,14 @@
-pretalx-release-hook
-====================
+pretalx-webhooks
+================
 
-Call one HTTP or HTTPS URL when a new schedule version is released.
+Call one configurable HTTP or HTTPS webhook for selected pretalx event activity.
 
 Install in the pretalx environment::
 
-    pip install /path/to/pretalx-release-hook
+    pip install /path/to/pretalx-webhooks
     python -m pretalx migrate
 
-Restart pretalx. Enable the plugin for the event. Open **Settings → Release hook**.
+Restart pretalx. Enable the plugin for the event. Open **Settings → Webhook**.
 Set the URL, GET/POST/PUT, payload, and optional HTTP header name/value pairs.
 Leave the URL empty to disable the hook.
 

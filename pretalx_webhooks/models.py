@@ -2,18 +2,18 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
-class ReleaseHookSettings(models.Model):
+class WebhookSettings(models.Model):
     event = models.OneToOneField("event.Event", on_delete=models.CASCADE)
-    url = models.URLField(blank=True, verbose_name=_("URL"))
+    url = models.URLField(blank=True, verbose_name="URL")
     method = models.CharField(
         max_length=10, default="POST", choices=[(v, v) for v in ("GET", "POST", "PUT")]
     )
     payload = models.TextField(blank=True, default="", verbose_name=_("Payload"))
 
 
-class ReleaseHookHeader(models.Model):
+class WebhookHeader(models.Model):
     settings = models.ForeignKey(
-        ReleaseHookSettings, on_delete=models.CASCADE, related_name="headers"
+        WebhookSettings, on_delete=models.CASCADE, related_name="headers"
     )
     name = models.CharField(max_length=255, verbose_name=_("Name"))
     value = models.TextField(blank=True, verbose_name=_("Value"))

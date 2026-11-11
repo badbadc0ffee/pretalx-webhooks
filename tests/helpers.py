@@ -19,6 +19,4 @@ def header_form_data(*headers):
 
 
 def url(event):
-    return reverse(
-        "plugins:pretalx_release_hook:settings", kwargs={"event": event.slug}
-    )
+    return reverse("plugins:pretalx_webhooks:settings", kwargs={"event": event.slug})

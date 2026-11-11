@@ -1,0 +1,74 @@
+# German translations for pretalx-webhooks.
+# Copyright (C) 2026 Florian Mösch
+# This file is distributed under the same license as pretalx-webhooks.
+msgid ""
+msgstr ""
+"Project-Id-Version: pretalx-webhooks\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-12 00:05+0100\n"
+"PO-Revision-Date: 2026-11-11 17:02+0100\n"
+"Last-Translator: Florian Mösch <florian@moesch.org>\n"
+"Language-Team: German\n"
+"Language: de_DE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+#: pretalx_webhooks/apps.py
+msgid "Call a webhook for selected event activity."
+msgstr "Rufe einen Webhook für ausgewählte Event-Aktivitäten auf."
+
+#: pretalx_webhooks/forms.py
+msgid "Enter a valid HTTP header name."
+msgstr "Gib einen gültigen HTTP-Header-Namen ein."
+
+#: pretalx_webhooks/forms.py pretalx_webhooks/models.py
+msgid "Value"
+msgstr "Wert"
+
+#: pretalx_webhooks/forms.py
+msgid "Enter a valid HTTP header value."
+msgstr "Gib einen gültigen HTTP-Header-Wert ein."
+
+#: pretalx_webhooks/forms.py
+msgid "Use an HTTP or HTTPS URL. Leave empty to disable the hook."
+msgstr ""
+"Verwende eine HTTP- oder HTTPS-URL. Lasse das Feld leer, um den Hook zu "
+"deaktivieren."
+
+#: pretalx_webhooks/forms.py
+#, python-brace-format
+msgid ""
+"GET ignores the payload. POST and PUT send this text as the body. Event mail "
+"placeholders such as {event_slug} are supported."
+msgstr ""
+"GET ignoriert die Nutzdaten. POST und PUT senden diesen Text als Body. "
+"Platzhalter aus E-Mail-Vorlagen wie {event_slug} werden unterstützt."
+
+#: pretalx_webhooks/models.py
+msgid "Payload"
+msgstr "Nutzdaten"
+
+#: pretalx_webhooks/payload.py
+msgid "Select GET, POST, or PUT."
+msgstr "Wähle GET, POST oder PUT aus."
+
+#: pretalx_webhooks/signals.py
+#: pretalx_webhooks/templates/pretalx_webhooks/settings.html
+msgid "Webhook"
+msgstr "Webhook"
+
+#: pretalx_webhooks/templates/pretalx_webhooks/settings.html
+msgid "HTTP Header"
+msgstr "HTTP-Header"
+
+#: pretalx_webhooks/views.py
+msgid "Webhook settings saved."
+msgstr "Webhook-Einstellungen gespeichert."
+
+#: pretalx_webhooks/views.py
+#, python-brace-format
+msgid "Rendered payload: {payload}"
+msgstr "Gerenderte Nutzdaten: {payload}"
+

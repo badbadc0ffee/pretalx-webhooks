@@ -1,13 +1,13 @@
 {% extends "orga/base.html" %}
 {% load i18n %}
 {% load static %}
-{% block extra_title %}{% translate "Release hook" %} ::
+{% block extra_title %}{% translate "Webhook" %} ::
 {% endblock %}
 {% block stylesheets %}
-    <link rel="stylesheet" href="{% static "pretalx_release_hook/settings.css" %}">
+    <link rel="stylesheet" href="{% static "pretalx_webhooks/settings.css" %}">
 {% endblock stylesheets %}
 {% block content %}
-    <h2>{% translate "Release hook" %}</h2>
+    <h2>{% translate "Webhook" %}</h2>
     <form method="post" autocomplete="off">
         {% csrf_token %}
         {{ form }}

@@ -1,8 +1,8 @@
 import pytest
 from django.core.exceptions import ValidationError
 
-from pretalx_release_hook import payload
-from pretalx_release_hook.payload import build_request
+from pretalx_webhooks import payload
+from pretalx_webhooks.payload import build_request
 
 pytestmark = pytest.mark.django_db
 

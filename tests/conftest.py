@@ -11,7 +11,7 @@ from pretalx.event.models import Event, Organiser, Team
 from pretalx.person.models import User
 from pretalx.schedule.models import Schedule
 
-from pretalx_release_hook.models import ReleaseHookSettings
+from pretalx_webhooks.models import WebhookSettings
 
 
 @pytest.fixture(autouse=True)
@@ -36,7 +36,7 @@ def event():
         organiser=organiser,
     )
     initialise_event(event)
-    enable_plugin(event, "pretalx_release_hook")
+    enable_plugin(event, "pretalx_webhooks")
     return event
 
 
@@ -62,7 +62,7 @@ def orga_client(orga_user, client):
 
 @pytest.fixture
 def hook(event):
-    return ReleaseHookSettings.objects.create(
+    return WebhookSettings.objects.create(
         event=event, url="https://example.org/hook", payload='{"action":"released"}'
     )
 

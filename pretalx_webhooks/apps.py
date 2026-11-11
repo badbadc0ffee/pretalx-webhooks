@@ -5,20 +5,18 @@ from . import __version__
 
 
 class PluginApp(AppConfig):
-    name = "pretalx_release_hook"
-    verbose_name = "pretalx Release Hook"
+    name = "pretalx_webhooks"
+    verbose_name = "pretalx Webhooks"
 
     class PretalxPluginMeta:
-        name = gettext_lazy("pretalx Release Hook")
+        name = "pretalx Webhooks"
         author = "Florian Mösch"
-        description = gettext_lazy(
-            "Call a webhook when a schedule version is released."
-        )
+        description = gettext_lazy("Call a webhook for selected event activity.")
         visible = True
         version = __version__
         category = "FEATURE"
         settings_links = [
-            (gettext_lazy("Settings"), "plugins:pretalx_release_hook:settings", {})
+            (gettext_lazy("Settings"), "plugins:pretalx_webhooks:settings", {})
         ]
 
     def ready(self):

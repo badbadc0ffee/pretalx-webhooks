@@ -6,17 +6,17 @@ from django.views.generic import FormView
 
 from pretalx.common.views.mixins import EventPermissionRequired
 
-from .forms import ReleaseHookSettingsForm
+from .forms import WebhookSettingsForm
 from .payload import payload_has_placeholders, render_payload
 
 
-class ReleaseHookSettingsView(EventPermissionRequired, FormView):
+class WebhookSettingsView(EventPermissionRequired, FormView):
     permission_required = "event.update_event"
-    template_name = "pretalx_release_hook/settings.html"
-    form_class = ReleaseHookSettingsForm
+    template_name = "pretalx_webhooks/settings.html"
+    form_class = WebhookSettingsForm
 
     def dispatch(self, request, *args, **kwargs):
-        if "pretalx_release_hook" not in request.event.plugin_list:
+        if "pretalx_webhooks" not in request.event.plugin_list:
             raise Http404
         return super().dispatch(request, *args, **kwargs)
 
@@ -36,7 +36,7 @@ class ReleaseHookSettingsView(EventPermissionRequired, FormView):
             settings = form.save()
             form.header_formset.instance = settings
             form.header_formset.save()
-        message = str(_("Hook settings saved."))
+        message = str(_("Webhook settings saved."))
         payload = form.cleaned_data["payload"]
         if form.cleaned_data["method"] != "GET" and payload_has_placeholders(payload):
             rendered_payload = render_payload(payload, self.request.event)

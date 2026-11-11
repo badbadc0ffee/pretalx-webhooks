@@ -3,11 +3,14 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+from django.contrib.contenttypes.models import ContentType
 
+from pretalx.common.models.log import ActivityLog
 from pretalx.event.models import Event
+from pretalx.schedule.domain.release import freeze_schedule
 
-from pretalx_release_hook import signals
-from pretalx_release_hook.signals import navigation
+from pretalx_webhooks import signals
+from pretalx_webhooks.signals import navigation
 
 pytestmark = pytest.mark.django_db
 
@@ -46,59 +49,109 @@ def test_transport_error_hides_exception_message(request_data):
     connection.close.assert_called_once()
 
 
-def test_missing_schedule_is_skipped():
-    with patch.object(signals, "send_request") as send:
-        signals.send_release_hook(999)
-    send.assert_not_called()
-
-
-def test_inactive_plugin_is_skipped(schedule, hook):
+def test_inactive_plugin_is_skipped(schedule, hook, django_capture_on_commit_callbacks):
     Event.objects.filter(pk=schedule.event_id).update(plugins="")
-    with patch.object(signals, "send_request") as send:
-        signals.send_release_hook(schedule.pk)
+    with (
+        patch.object(signals, "send_request") as send,
+        django_capture_on_commit_callbacks(execute=True) as callbacks,
+    ):
+        schedule.log_action("pretalx.schedule.release")
+    assert callbacks == []
     send.assert_not_called()
 
 
-def test_hook_is_skipped_without_settings(schedule):
+def test_hook_is_skipped_without_settings(event):
     with patch.object(signals, "send_request") as send:
-        signals.send_release_hook(schedule.pk)
+        signals.send_webhook(event, "pretalx.schedule.release")
     send.assert_not_called()
 
 
-def test_unsupported_url_scheme_logs_hook_failure(schedule, hook, caplog):
+def test_unsupported_url_scheme_logs_hook_failure(event, hook, caplog):
     hook.url = "ftp://example.org"
     hook.save()
     with patch.object(signals, "send_request") as send:
-        signals.send_release_hook(schedule.pk)
+        signals.send_webhook(event, "pretalx.schedule.release")
     send.assert_not_called()
-    assert "Release hook failed" in caplog.text
+    assert "Webhook failed" in caplog.text
 
 
-def test_http_failure_is_logged(schedule, hook, caplog):
+def test_http_failure_is_logged(event, hook, caplog):
     with patch.object(signals, "send_request", return_value=500) as send:
-        signals.send_release_hook(schedule.pk)
+        signals.send_webhook(event, "pretalx.schedule.release")
     send.assert_called_once()
     assert "HTTP 500" in caplog.text
 
 
-def test_release_hook_renders_mail_placeholders(schedule, hook):
+def test_webhook_renders_mail_placeholders(event, hook):
     hook.payload = '{"event":"{event_slug}"}'
     hook.save()
     with patch.object(signals, "send_request", return_value=204) as send:
-        signals.send_release_hook(schedule.pk)
+        signals.send_webhook(event, "pretalx.schedule.release")
     request = send.call_args.args[0]
     assert request["body"] == '{"event":"test"}'
     assert request["headers"]["Content-Type"] == "application/json"
 
 
-def test_release_sends_hook_once_after_commit(
+def test_schedule_release_activity_log_sends_hook_after_commit(
     schedule, hook, django_capture_on_commit_callbacks
 ):
     with (
         patch.object(signals, "send_request", return_value=204) as send,
         django_capture_on_commit_callbacks(execute=True),
     ):
-        signals.release(sender=schedule.event, schedule=schedule)
+        schedule.log_action("pretalx.schedule.release")
+        send.assert_not_called()
+    send.assert_called_once()
+
+
+def test_other_activity_log_action_does_not_send_hook(
+    schedule, hook, django_capture_on_commit_callbacks
+):
+    with (
+        patch.object(signals, "send_request") as send,
+        django_capture_on_commit_callbacks(execute=True),
+    ):
+        schedule.log_action("pretalx.schedule.update")
+    send.assert_not_called()
+
+
+def test_updated_activity_log_does_not_send_hook(
+    schedule, hook, django_capture_on_commit_callbacks
+):
+    activity_log = schedule.log_action("pretalx.schedule.release")
+    with (
+        patch.object(signals, "send_request") as send,
+        django_capture_on_commit_callbacks(execute=True),
+    ):
+        activity_log.data = {"updated": True}
+        activity_log.save(update_fields=["data"])
+    send.assert_not_called()
+
+
+def test_activity_log_without_event_does_not_send_hook(
+    schedule, hook, django_capture_on_commit_callbacks
+):
+    with (
+        patch.object(signals, "send_request") as send,
+        django_capture_on_commit_callbacks(execute=True) as callbacks,
+    ):
+        ActivityLog.objects.create(
+            content_type=ContentType.objects.get_for_model(schedule),
+            object_id=schedule.pk,
+            action_type="pretalx.schedule.release",
+        )
+    assert callbacks == []
+    send.assert_not_called()
+
+
+def test_real_schedule_release_sends_hook_after_commit(
+    event, hook, django_capture_on_commit_callbacks
+):
+    with (
+        patch.object(signals, "send_request", return_value=204) as send,
+        django_capture_on_commit_callbacks(execute=True),
+    ):
+        freeze_schedule(event.wip_schedule, "1.0", notify_speakers=False)
         send.assert_not_called()
     send.assert_called_once()
 

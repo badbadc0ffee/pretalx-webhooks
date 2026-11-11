@@ -4,11 +4,11 @@ from django.core.validators import RegexValidator
 from django.forms import inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 
-from .models import ReleaseHookHeader, ReleaseHookSettings
+from .models import WebhookHeader, WebhookSettings
 from .payload import build_request, render_payload
 
 
-class ReleaseHookHeaderForm(forms.ModelForm):
+class WebhookHeaderForm(forms.ModelForm):
     name = forms.CharField(
         label=_("Header"),
         max_length=255,
@@ -33,28 +33,24 @@ class ReleaseHookHeaderForm(forms.ModelForm):
     )
 
     class Meta:
-        model = ReleaseHookHeader
+        model = WebhookHeader
         fields = ("name", "value")
 
 
-ReleaseHookHeaderFormSet = inlineformset_factory(
-    ReleaseHookSettings,
-    ReleaseHookHeader,
-    form=ReleaseHookHeaderForm,
-    extra=1,
-    can_delete=True,
+WebhookHeaderFormSet = inlineformset_factory(
+    WebhookSettings, WebhookHeader, form=WebhookHeaderForm, extra=1, can_delete=True
 )
 
 
-class ReleaseHookSettingsForm(forms.ModelForm):
+class WebhookSettingsForm(forms.ModelForm):
     def __init__(self, *args, event, **kwargs):
-        instance = ReleaseHookSettings.objects.filter(
+        instance = WebhookSettings.objects.filter(
             event=event
-        ).first() or ReleaseHookSettings(event=event)
+        ).first() or WebhookSettings(event=event)
         super().__init__(*args, instance=instance, **kwargs)
         self.fields["payload"].strip = False
         header_data = self.data if "headers-TOTAL_FORMS" in self.data else None
-        self.header_formset = ReleaseHookHeaderFormSet(
+        self.header_formset = WebhookHeaderFormSet(
             data=header_data, instance=self.instance, prefix="headers"
         )
 
@@ -76,7 +72,7 @@ class ReleaseHookSettingsForm(forms.ModelForm):
         return data
 
     class Meta:
-        model = ReleaseHookSettings
+        model = WebhookSettings
         fields = ("url", "method", "payload")
         help_texts = {
             "url": _("Use an HTTP or HTTPS URL. Leave empty to disable the hook."),
