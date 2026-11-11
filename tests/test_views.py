@@ -24,7 +24,9 @@ def test_settings_view_rejects_inactive_plugin(event, orga_user):
 
 
 def test_settings_model_is_updated(orga_client, event):
-    settings_data = form_data(payload="\nreleased\n")
+    settings_data = form_data(
+        payload="\nreleased\n", action_type="pretalx.event.activate"
+    )
     headers = [("Authorization", "Bearer secret"), ("X-Event", "democon")]
     data = {**settings_data, **header_form_data(*headers)}
     response = orga_client.post(url(event), data)
@@ -34,11 +36,14 @@ def test_settings_model_is_updated(orga_client, event):
     assert settings.url == settings_data["url"]
     assert settings.method == settings_data["method"]
     assert settings.payload == settings_data["payload"]
+    assert settings.action_type == settings_data["action_type"]
     assert list(settings.headers.order_by("pk").values_list("name", "value")) == headers
 
 
 def test_settings_survive_reload(orga_client, event):
-    settings_data = form_data(payload="\nreleased\n")
+    settings_data = form_data(
+        payload="\nreleased\n", action_type="pretalx.event.activate"
+    )
     headers = [("Authorization", "Bearer secret"), ("X-Event", "democon")]
     data = {**settings_data, **header_form_data(*headers)}
     response = orga_client.post(url(event), data, follow=True)

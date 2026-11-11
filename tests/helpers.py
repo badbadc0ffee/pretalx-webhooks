@@ -3,6 +3,7 @@ from django.urls import reverse
 
 def form_data(**kwargs):
     return {
+        "action_type": "pretalx.schedule.release",
         "url": "https://example.org/hook",
         "method": "POST",
         "payload": '{"action":"released"}',

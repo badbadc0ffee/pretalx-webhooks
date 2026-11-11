@@ -60,9 +60,13 @@ def test_inactive_plugin_is_skipped(schedule, hook, django_capture_on_commit_cal
     send.assert_not_called()
 
 
-def test_hook_is_skipped_without_settings(event):
-    with patch.object(signals, "send_request") as send:
-        signals.send_webhook(event, "pretalx.schedule.release")
+def test_hook_is_skipped_without_settings(schedule, django_capture_on_commit_callbacks):
+    with (
+        patch.object(signals, "send_request") as send,
+        django_capture_on_commit_callbacks(execute=True) as callbacks,
+    ):
+        schedule.log_action("pretalx.schedule.release")
+    assert callbacks == []
     send.assert_not_called()
 
 
@@ -70,14 +74,14 @@ def test_unsupported_url_scheme_logs_hook_failure(event, hook, caplog):
     hook.url = "ftp://example.org"
     hook.save()
     with patch.object(signals, "send_request") as send:
-        signals.send_webhook(event, "pretalx.schedule.release")
+        signals.send_webhook(event)
     send.assert_not_called()
     assert "Webhook failed" in caplog.text
 
 
 def test_http_failure_is_logged(event, hook, caplog):
     with patch.object(signals, "send_request", return_value=500) as send:
-        signals.send_webhook(event, "pretalx.schedule.release")
+        signals.send_webhook(event)
     send.assert_called_once()
     assert "HTTP 500" in caplog.text
 
@@ -86,7 +90,7 @@ def test_webhook_renders_mail_placeholders(event, hook):
     hook.payload = '{"event":"{event_slug}"}'
     hook.save()
     with patch.object(signals, "send_request", return_value=204) as send:
-        signals.send_webhook(event, "pretalx.schedule.release")
+        signals.send_webhook(event)
     request = send.call_args.args[0]
     assert request["body"] == '{"event":"test"}'
     assert request["headers"]["Content-Type"] == "application/json"
@@ -109,10 +113,24 @@ def test_other_activity_log_action_does_not_send_hook(
 ):
     with (
         patch.object(signals, "send_request") as send,
-        django_capture_on_commit_callbacks(execute=True),
+        django_capture_on_commit_callbacks(execute=True) as callbacks,
     ):
         schedule.log_action("pretalx.schedule.update")
+    assert callbacks == []
     send.assert_not_called()
+
+
+def test_selected_action_type_sends_hook(
+    schedule, hook, django_capture_on_commit_callbacks
+):
+    hook.action_type = "pretalx.event.activate"
+    hook.save()
+    with (
+        patch.object(signals, "send_request", return_value=204) as send,
+        django_capture_on_commit_callbacks(execute=True),
+    ):
+        schedule.log_action("pretalx.event.activate")
+    send.assert_called_once()
 
 
 def test_updated_activity_log_does_not_send_hook(

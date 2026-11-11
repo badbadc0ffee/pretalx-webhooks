@@ -19,6 +19,12 @@ class Migration(migrations.Migration):
                         auto_created=True, primary_key=True, serialize=False
                     ),
                 ),
+                (
+                    "action_type",
+                    models.CharField(
+                        default="pretalx.schedule.release", max_length=200
+                    ),
+                ),
                 ("url", models.URLField()),
                 ("method", models.CharField(default="POST", max_length=10)),
                 ("payload", models.TextField(default="")),

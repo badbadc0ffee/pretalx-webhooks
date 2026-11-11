@@ -4,8 +4,12 @@ from django.core.validators import RegexValidator
 from django.forms import inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 
+from pretalx.common.log import ACTION_TYPE_GROUPS
+
 from .models import WebhookHeader, WebhookSettings
 from .payload import build_request, render_payload
+
+ACTION_TYPE_CHOICES = tuple(ACTION_TYPE_GROUPS.items())
 
 
 class WebhookHeaderForm(forms.ModelForm):
@@ -43,6 +47,10 @@ WebhookHeaderFormSet = inlineformset_factory(
 
 
 class WebhookSettingsForm(forms.ModelForm):
+    action_type = forms.ChoiceField(
+        choices=ACTION_TYPE_CHOICES, label=_("Action"), widget=forms.Select()
+    )
+
     def __init__(self, *args, event, **kwargs):
         instance = WebhookSettings.objects.filter(
             event=event
@@ -73,7 +81,7 @@ class WebhookSettingsForm(forms.ModelForm):
 
     class Meta:
         model = WebhookSettings
-        fields = ("url", "method", "payload")
+        fields = ("action_type", "url", "method", "payload")
         help_texts = {
             "url": _("Use an HTTP or HTTPS URL. Leave empty to disable the hook."),
             "payload": _(

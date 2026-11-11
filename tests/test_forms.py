@@ -13,3 +13,10 @@ def test_empty_url_is_saved(event, hook):
     form.save()
     hook.refresh_from_db()
     assert hook.url == ""
+
+
+def test_action_type_uses_activity_log_filter_choices(event):
+    form = WebhookSettingsForm(event=event)
+    field = form.fields["action_type"]
+    assert not field.widget.allow_multiple_selected
+    assert ("pretalx.schedule.release", "Released") in dict(field.choices)["Schedule"]

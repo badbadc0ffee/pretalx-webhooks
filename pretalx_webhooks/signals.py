@@ -44,12 +44,8 @@ def send_request(request):
 
 
 @scopes_disabled()
-def send_webhook(event, action_type):
-    if action_type != "pretalx.schedule.release":
-        return
-    config = getattr(event, "webhooksettings", None)
-    if not config or not config.url:
-        return
+def send_webhook(event):
+    config = event.webhooksettings
     try:
         headers = config.headers.values_list("name", "value")
         payload = render_payload(config.payload, event)
@@ -73,9 +69,10 @@ def activity_log_created(sender, instance, created, **kwargs):
     event.refresh_from_db(fields=["plugins"])
     if "pretalx_webhooks" not in event.plugin_list:
         return
-    transaction.on_commit(
-        partial(send_webhook, event, instance.action_type), robust=True
-    )
+    config = getattr(event, "webhooksettings", None)
+    if not config or config.action_type != instance.action_type or not config.url:
+        return
+    transaction.on_commit(partial(send_webhook, event), robust=True)
 
 
 @receiver(nav_event_settings, dispatch_uid="webhook_navigation")
