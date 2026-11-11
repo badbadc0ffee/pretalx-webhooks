@@ -1,3 +1,5 @@
+import html
+
 import pytest
 from django.http import Http404
 from django.test import RequestFactory
@@ -52,6 +54,16 @@ def test_settings_survive_reload(orga_client, event):
     assert b"Hook settings saved." in response.content
 
 
+def test_success_message_shows_rendered_payload(orga_client, event):
+    response = orga_client.post(
+        url(event), form_data(payload='{"event":"{event_slug}"}'), follow=True
+    )
+    assert response.status_code == 200
+    content = html.unescape(response.content.decode())
+    assert "Hook settings saved." in content
+    assert 'Rendered payload: {"event":"test"}' in content
+
+
 def test_unsupported_url_scheme_error_is_visible(orga_client, event):
     response = orga_client.post(url(event), form_data(url="ftp://example.org"))
     assert response.status_code == 200
@@ -68,4 +80,11 @@ def test_invalid_header_value_error_is_visible(orga_client, event):
     response = orga_client.post(url(event), data)
     assert response.status_code == 200
     assert "valid HTTP header value" in response.content.decode()
+    assert not ReleaseHookSettings.objects.exists()
+
+
+def test_unknown_payload_placeholder_error_is_visible(orga_client, event):
+    response = orga_client.post(url(event), form_data(payload='{"event":"{unknown}"}'))
+    assert response.status_code == 200
+    assert "Unknown placeholder" in response.content.decode()
     assert not ReleaseHookSettings.objects.exists()

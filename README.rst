@@ -14,6 +14,8 @@ Leave the URL empty to disable the hook.
 
 GET ignores the payload. POST and PUT send the payload as
 UTF-8 text. JSON bodies use application/json. Other bodies use text/plain.
+Event mail placeholders can be used in the payload, for example
+``{"event":"{event_slug}"}``. JSON object braces do not need to be escaped.
 Failed requests are logged.
 
 Run tests::

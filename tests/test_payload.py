@@ -1,7 +1,10 @@
 import pytest
 from django.core.exceptions import ValidationError
 
+from pretalx_release_hook import payload
 from pretalx_release_hook.payload import build_request
+
+pytestmark = pytest.mark.django_db
 
 
 def test_unsupported_method_is_rejected():
@@ -40,3 +43,20 @@ def test_custom_content_type_overrides_inferred_content_type():
         [("Content-Type", "application/cloudevents+json")],
     )
     assert request["headers"] == {"Content-Type": "application/cloudevents+json"}
+
+
+def test_mail_placeholders_are_rendered_without_interpreting_json_braces(event):
+    template = '{"event":"{event_slug}","name":"{event_name}"}'
+    assert payload.render_payload(template, event) == (
+        '{"event":"test","name":"Test event"}'
+    )
+
+
+def test_payload_without_mail_placeholders_is_unchanged(event):
+    template = '{"action":"released"}'
+    assert payload.render_payload(template, event) == template
+
+
+def test_unknown_mail_placeholder_is_rejected(event):
+    with pytest.raises(ValidationError, match="Unknown placeholder"):
+        payload.render_payload('{"event":"{unknown}"}', event)

@@ -5,7 +5,7 @@ from django.forms import inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 
 from .models import ReleaseHookHeader, ReleaseHookSettings
-from .payload import build_request
+from .payload import build_request, render_payload
 
 
 class ReleaseHookHeaderForm(forms.ModelForm):
@@ -69,7 +69,8 @@ class ReleaseHookSettingsForm(forms.ModelForm):
         data = super().clean()
         if not self.errors and data["url"]:
             try:
-                build_request(data["url"], data["method"], data["payload"])
+                payload = render_payload(data["payload"], self.instance.event)
+                build_request(data["url"], data["method"], payload)
             except ValidationError as error:
                 self.add_error(None, error)
         return data
@@ -80,7 +81,8 @@ class ReleaseHookSettingsForm(forms.ModelForm):
         help_texts = {
             "url": _("Use an HTTP or HTTPS URL. Leave empty to disable the hook."),
             "payload": _(
-                "GET ignores the payload. POST and PUT send this text as the body."
+                "GET ignores the payload. POST and PUT send this text as the body. "
+                "Event mail placeholders such as {event_slug} are supported."
             ),
         }
         widgets = {

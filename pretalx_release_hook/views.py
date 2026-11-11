@@ -7,6 +7,7 @@ from django.views.generic import FormView
 from pretalx.common.views.mixins import EventPermissionRequired
 
 from .forms import ReleaseHookSettingsForm
+from .payload import payload_has_placeholders, render_payload
 
 
 class ReleaseHookSettingsView(EventPermissionRequired, FormView):
@@ -35,5 +36,12 @@ class ReleaseHookSettingsView(EventPermissionRequired, FormView):
             settings = form.save()
             form.header_formset.instance = settings
             form.header_formset.save()
-        messages.success(self.request, _("Hook settings saved."))
+        message = str(_("Hook settings saved."))
+        payload = form.cleaned_data["payload"]
+        if form.cleaned_data["method"] != "GET" and payload_has_placeholders(payload):
+            rendered_payload = render_payload(payload, self.request.event)
+            message += " " + str(_("Rendered payload: {payload}")).format(
+                payload=rendered_payload
+            )
+        messages.success(self.request, message)
         return super().form_valid(form)

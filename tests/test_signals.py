@@ -81,6 +81,16 @@ def test_http_failure_is_logged(schedule, hook, caplog):
     assert "HTTP 500" in caplog.text
 
 
+def test_release_hook_renders_mail_placeholders(schedule, hook):
+    hook.payload = '{"event":"{event_slug}"}'
+    hook.save()
+    with patch.object(signals, "send_request", return_value=204) as send:
+        signals.send_release_hook(schedule.pk)
+    request = send.call_args.args[0]
+    assert request["body"] == '{"event":"test"}'
+    assert request["headers"]["Content-Type"] == "application/json"
+
+
 def test_release_sends_hook_once_after_commit(
     schedule, hook, django_capture_on_commit_callbacks
 ):

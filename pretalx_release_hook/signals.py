@@ -15,7 +15,7 @@ from pretalx.schedule.models import Schedule
 from pretalx.schedule.signals import schedule_release
 
 from .models import ReleaseHookSettings
-from .payload import build_request
+from .payload import build_request, render_payload
 
 logger = logging.getLogger(__name__)
 
@@ -57,8 +57,9 @@ def send_release_hook(schedule_id):
         return
     try:
         headers = config.headers.values_list("name", "value")
+        payload = render_payload(config.payload, event)
         status = send_request(
-            build_request(config.url, config.method, config.payload, headers)
+            build_request(config.url, config.method, payload, headers)
         )
     except (ValidationError, TransportError):
         logger.warning("Release hook failed for schedule %s.", schedule_id)
