@@ -19,21 +19,16 @@ def header_form_data(*headers, prefix="headers"):
     return data
 
 
-def webhook_formset_data(*webhooks):
-    initial_forms = sum(bool(webhook.get("id")) for webhook in webhooks)
-    data = {
-        "webhooks-TOTAL_FORMS": str(len(webhooks)),
-        "webhooks-INITIAL_FORMS": str(initial_forms),
-    }
-    for index, webhook in enumerate(webhooks):
-        webhook_values = webhook.copy()
-        headers = webhook_values.pop("headers", ())
-        values = form_data(**webhook_values)
-        for name, value in values.items():
-            data[f"webhooks-{index}-{name}"] = value
-        data.update(header_form_data(*headers, prefix=f"webhooks-{index}-headers"))
-    return data
-
-
 def url(event):
     return reverse("plugins:pretalx_webhooks:settings", kwargs={"event": event.slug})
+
+
+def webhook_url(event, webhook):
+    return reverse(
+        "plugins:pretalx_webhooks:webhook",
+        kwargs={"event": event.slug, "pk": webhook.pk},
+    )
+
+
+def webhook_data(*headers, **kwargs):
+    return {**form_data(**kwargs), **header_form_data(*headers)}

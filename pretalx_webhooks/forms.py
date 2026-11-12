@@ -1,15 +1,26 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
-from django.forms import BaseInlineFormSet, inlineformset_factory
+from django.forms import inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 
-from pretalx.common.log import ACTION_TYPE_GROUPS
+from pretalx.common.log import ACTION_TYPE_GROUPS, LOG_ALIASES, LOG_NAMES
 
 from .models import WebhookHeader, WebhookSettings
 from .payload import build_request, render_payload
 
-ACTION_TYPE_CHOICES = tuple(ACTION_TYPE_GROUPS.items())
+LEGACY_ACTION_TYPES = {*LOG_ALIASES, "pretalx.submission.deleted"}
+ACTION_TYPE_CHOICES = tuple(
+    (
+        group,
+        tuple(
+            (action_type, LOG_NAMES.get(action_type, label))
+            for action_type, label in actions
+            if action_type not in LEGACY_ACTION_TYPES
+        ),
+    )
+    for group, actions in ACTION_TYPE_GROUPS.items()
+)
 
 
 class WebhookHeaderForm(forms.ModelForm):
@@ -86,40 +97,3 @@ class WebhookSettingsForm(forms.ModelForm):
             "url": forms.URLInput(attrs={"autocomplete": "off"}),
             "payload": forms.Textarea(attrs={"rows": 5}),
         }
-
-
-class BaseWebhookSettingsFormSet(BaseInlineFormSet):
-    def add_fields(self, form, index):
-        super().add_fields(form, index)
-        form.header_formset = WebhookHeaderFormSet(
-            data=self.data if self.is_bound else None,
-            instance=form.instance,
-            prefix=f"{form.prefix}-headers",
-        )
-
-    def is_valid(self):
-        settings_valid = super().is_valid()
-        headers_valid = True
-        for form in self.forms:
-            if self.can_delete and self._should_delete_form(form):
-                continue
-            headers_valid = form.header_formset.is_valid() and headers_valid
-        return settings_valid and headers_valid
-
-    def save(self):
-        instances = super().save()
-        for form in self.forms:
-            if form.instance.pk and not self._should_delete_form(form):
-                form.header_formset.instance = form.instance
-                form.header_formset.save()
-        return instances
-
-
-WebhookSettingsFormSet = inlineformset_factory(
-    parent_model=WebhookSettings._meta.get_field("event").related_model,
-    model=WebhookSettings,
-    form=WebhookSettingsForm,
-    formset=BaseWebhookSettingsFormSet,
-    extra=1,
-    can_delete=True,
-)

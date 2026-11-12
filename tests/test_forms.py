@@ -15,8 +15,21 @@ def test_empty_url_is_saved(event, hook):
     assert hook.url == ""
 
 
-def test_action_type_uses_activity_log_filter_choices(event):
+def test_action_type_uses_full_activity_log_text(event):
     form = WebhookSettingsForm(event=event)
     field = form.fields["action_type"]
     assert not field.widget.allow_multiple_selected
-    assert ("pretalx.schedule.release", "Released") in dict(field.choices)["Schedule"]
+    assert ("pretalx.schedule.release", "A new schedule version was released.") in dict(
+        field.choices
+    )["Schedule"]
+
+
+def test_action_type_excludes_legacy_choices(event):
+    form = WebhookSettingsForm(event=event)
+    choices = {
+        action_type
+        for _, action_choices in form.fields["action_type"].choices
+        for action_type, _ in action_choices
+    }
+    assert "pretalx.submission.delete" in choices
+    assert "pretalx.submission.deleted" not in choices

@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from pretalx.common.log import LOG_NAMES
+
 
 class WebhookSettings(models.Model):
     event = models.ForeignKey(
@@ -12,6 +14,9 @@ class WebhookSettings(models.Model):
         max_length=10, default="POST", choices=[(v, v) for v in ("GET", "POST", "PUT")]
     )
     payload = models.TextField(blank=True, default="", verbose_name=_("Payload"))
+
+    def get_action_type_display(self):
+        return LOG_NAMES.get(self.action_type, self.action_type)
 
 
 class WebhookHeader(models.Model):

@@ -1,0 +1,66 @@
+{% extends "orga/base.html" %}
+{% load i18n %}
+{% load static %}
+{% block extra_title %}{% translate "Webhook" %} ::{% endblock %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{% static "pretalx_webhooks/settings.css" %}">
+{% endblock stylesheets %}
+{% block content %}
+    <h2>{% translate "Webhook" %}</h2>
+    <form method="post" autocomplete="off">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {{ form.action_type.as_field_group }}
+        {{ form.url.as_field_group }}
+        {{ form.method.as_field_group }}
+        {{ form.payload.as_field_group }}
+
+        {{ header_formset.management_form }}
+        {{ header_formset.non_form_errors }}
+        {% for header_form in header_formset %}
+            <div class="header-form form-group row">
+                {% for hidden_field in header_form.hidden_fields %}{{ hidden_field }}{% endfor %}
+                {{ header_form.non_field_errors }}
+                <label class="col-md-3 col-form-label" for="{{ header_form.name.id_for_label }}">
+                    {% translate "HTTP Header" %}
+                    <span class="optional">{% translate "Optional" %}</span>
+                </label>
+                <div class="col-md-9">
+                    <div class="input-group">
+                        {{ header_form.name }}
+                        {{ header_form.value }}
+                    </div>
+                    {% for error in header_form.name.errors %}<div class="invalid-feedback d-block">
+                            {{ error }}
+                        </div>{% endfor %}
+                    {% for error in header_form.value.errors %}<div class="invalid-feedback d-block">
+                            {{ error }}
+                        </div>{% endfor %}
+                    {% if header_form.instance.pk %}
+                        <div class="form-check mt-2">
+                            {{ header_form.DELETE }}
+                            <label
+                                class="form-check-label"
+                                for="{{ header_form.DELETE.id_for_label }}"
+                            >{% translate "Delete this header" %}</label>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+
+        <div class="submit-group">
+            <a
+                class="btn btn-outline-info"
+                href="{% url "plugins:pretalx_webhooks:settings" event=request.event.slug %}"
+            >
+                {% translate "Back" %}
+            </a>
+            <button class="btn btn-danger" type="submit" name="delete" value="1">
+                <i class="fa fa-trash" aria-hidden="true"></i>
+                {% translate "Delete" %}
+            </button>
+            <button class="btn btn-success" type="submit">{% translate "Save" %}</button>
+        </div>
+    </form>
+{% endblock %}
