@@ -1,7 +1,7 @@
 pretalx-webhooks
 ================
 
-Call one configurable HTTP or HTTPS webhook for selected pretalx event activity.
+Call configurable HTTP or HTTPS webhooks for selected pretalx event activity.
 
 Install in the pretalx environment::
 
@@ -9,8 +9,9 @@ Install in the pretalx environment::
     python -m pretalx migrate
 
 Restart pretalx. Enable the plugin for the event. Open **Settings → Webhook**.
-Set the URL, GET/POST/PUT, payload, and optional HTTP header name/value pairs.
-Leave the URL empty to disable the hook.
+For every webhook, select an action and set the URL, GET/POST/PUT, payload,
+and optional HTTP header name/value pairs. The additional empty form creates a
+new webhook when saved. Leave a URL empty to disable that webhook.
 
 GET ignores the payload. POST and PUT send the payload as
 UTF-8 text. JSON bodies use application/json. Other bodies use text/plain.

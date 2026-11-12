@@ -30,8 +30,10 @@ class Migration(migrations.Migration):
                 ("payload", models.TextField(default="")),
                 (
                     "event",
-                    models.OneToOneField(
-                        on_delete=django.db.models.deletion.CASCADE, to="event.event"
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="webhooks",
+                        to="event.event",
                     ),
                 ),
             ],

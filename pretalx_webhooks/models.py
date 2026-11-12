@@ -3,7 +3,9 @@ from django.utils.translation import gettext_lazy as _
 
 
 class WebhookSettings(models.Model):
-    event = models.OneToOneField("event.Event", on_delete=models.CASCADE)
+    event = models.ForeignKey(
+        "event.Event", on_delete=models.CASCADE, related_name="webhooks"
+    )
     action_type = models.CharField(max_length=200, default="pretalx.schedule.release")
     url = models.URLField(blank=True, verbose_name="URL")
     method = models.CharField(

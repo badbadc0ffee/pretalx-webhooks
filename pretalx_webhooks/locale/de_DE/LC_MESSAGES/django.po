@@ -63,6 +63,10 @@ msgstr "Webhook"
 msgid "HTTP Header"
 msgstr "HTTP-Header"
 
+#: pretalx_webhooks/templates/pretalx_webhooks/settings.html
+msgid "New webhook"
+msgstr "Neuer Webhook"
+
 #: pretalx_webhooks/views.py
 msgid "Webhook settings saved."
 msgstr "Webhook-Einstellungen gespeichert."

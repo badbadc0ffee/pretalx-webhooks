@@ -10,6 +10,7 @@ from pretalx.event.models import Event
 from pretalx.schedule.domain.release import freeze_schedule
 
 from pretalx_webhooks import signals
+from pretalx_webhooks.models import WebhookSettings
 from pretalx_webhooks.signals import navigation
 
 pytestmark = pytest.mark.django_db
@@ -74,14 +75,14 @@ def test_unsupported_url_scheme_logs_hook_failure(event, hook, caplog):
     hook.url = "ftp://example.org"
     hook.save()
     with patch.object(signals, "send_request") as send:
-        signals.send_webhook(event)
+        signals.send_webhook(event, hook)
     send.assert_not_called()
     assert "Webhook failed" in caplog.text
 
 
 def test_http_failure_is_logged(event, hook, caplog):
     with patch.object(signals, "send_request", return_value=500) as send:
-        signals.send_webhook(event)
+        signals.send_webhook(event, hook)
     send.assert_called_once()
     assert "HTTP 500" in caplog.text
 
@@ -90,7 +91,7 @@ def test_webhook_renders_mail_placeholders(event, hook):
     hook.payload = '{"event":"{event_slug}"}'
     hook.save()
     with patch.object(signals, "send_request", return_value=204) as send:
-        signals.send_webhook(event)
+        signals.send_webhook(event, hook)
     request = send.call_args.args[0]
     assert request["body"] == '{"event":"test"}'
     assert request["headers"]["Content-Type"] == "application/json"
@@ -131,6 +132,52 @@ def test_selected_action_type_sends_hook(
     ):
         schedule.log_action("pretalx.event.activate")
     send.assert_called_once()
+
+
+def test_event_can_have_multiple_webhooks(event, hook):
+    second_hook = WebhookSettings.objects.create(
+        event=event,
+        action_type="pretalx.event.activate",
+        url="https://example.org/activated",
+    )
+    assert list(event.webhooks.order_by("pk")) == [hook, second_hook]
+
+
+def test_all_matching_webhooks_are_sent_after_commit(
+    schedule, hook, django_capture_on_commit_callbacks
+):
+    WebhookSettings.objects.create(
+        event=schedule.event,
+        action_type="pretalx.schedule.release",
+        url="https://example.org/second",
+    )
+    with (
+        patch.object(signals, "send_request", return_value=204) as send,
+        django_capture_on_commit_callbacks(execute=True) as callbacks,
+    ):
+        schedule.log_action("pretalx.schedule.release")
+    assert len(callbacks) == 2
+    assert {call.args[0]["url"] for call in send.call_args_list} == {
+        hook.url,
+        "https://example.org/second",
+    }
+
+
+def test_only_webhooks_matching_the_action_type_are_sent(
+    schedule, hook, django_capture_on_commit_callbacks
+):
+    WebhookSettings.objects.create(
+        event=schedule.event,
+        action_type="pretalx.event.activate",
+        url="https://example.org/activated",
+    )
+    with (
+        patch.object(signals, "send_request", return_value=204) as send,
+        django_capture_on_commit_callbacks(execute=True) as callbacks,
+    ):
+        schedule.log_action("pretalx.event.activate")
+    assert len(callbacks) == 1
+    assert send.call_args.args[0]["url"] == "https://example.org/activated"
 
 
 def test_updated_activity_log_does_not_send_hook(

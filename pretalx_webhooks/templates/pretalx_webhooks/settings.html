@@ -6,60 +6,108 @@
 {% block stylesheets %}
     <link rel="stylesheet" href="{% static "pretalx_webhooks/settings.css" %}">
 {% endblock stylesheets %}
+{% block scripts %}
+    <script defer src="{% static "pretalx_webhooks/settings.js" %}"></script>
+{% endblock scripts %}
 {% block content %}
     <h2>{% translate "Webhook" %}</h2>
     <form method="post" autocomplete="off">
         {% csrf_token %}
-        {{ form }}
-        <div class="formset" data-formset data-formset-prefix="{{ header_formset.prefix }}">
-            {{ header_formset.management_form }}
-            {{ header_formset.non_form_errors }}
-            <div id="header-forms" data-formset-body>
-                {% for header_form in header_formset %}
-                    <div class="header-form form-group row" data-formset-form>
-                        {% for hidden_field in header_form.hidden_fields %}
-                            {{ hidden_field }}
-                        {% endfor %}
-                        <div class="sr-only">{{ header_form.DELETE }}</div>
-                        {{ header_form.non_field_errors }}
-                        <label class="col-md-3 col-form-label" for="{{ header_form.name.id_for_label }}">
-                            {% translate "HTTP Header" %}
-                            <span class="optional">{% translate "Optional" %}</span>
-                        </label>
-                        <div class="col-md-9">
-                            <label
-                                class="sr-only"
-                                for="{{ header_form.name.id_for_label }}"
-                            >{{ header_form.name.label }}</label>
-                            <label
-                                class="sr-only"
-                                for="{{ header_form.value.id_for_label }}"
-                            >{{ header_form.value.label }}</label>
-                            <div class="input-group">
-                                {{ header_form.name }}
-                                {{ header_form.value }}
-                                {% if header_form.instance.pk %}
-                                    <div class="input-group-append">
-                                        <button
-                                            type="button"
-                                            class="btn btn-danger"
-                                            data-formset-delete-button
-                                            title="{% translate "Delete" %}"
-                                            aria-label="{% translate "Delete" %}"
-                                        >
-                                            <i class="fa fa-trash" aria-hidden="true"></i>
-                                        </button>
-                                    </div>
-                                {% endif %}
+        {{ form.management_form }}
+        {{ form.non_form_errors }}
+        <div class="formset">
+            <div>
+                {% for webhook_form in form %}
+                    <details class="card mb-3 webhook-form" data-webhook-form open>
+                        <summary class="card-header">
+                            {% if webhook_form.instance.pk %}
+                                {{ webhook_form.instance.get_action_type_display|default:webhook_form.instance.action_type }}
+                                · {{ webhook_form.instance.url }}
+                            {% else %}
+                                {% translate "New webhook" %}
+                            {% endif %}
+                        </summary>
+                        <div class="card-body">
+                            {% for hidden_field in webhook_form.hidden_fields %}
+                                {{ hidden_field }}
+                            {% endfor %}
+                            <div class="sr-only" data-webhook-delete-field>{{ webhook_form.DELETE }}</div>
+                            {{ webhook_form.non_field_errors }}
+                            {{ webhook_form.action_type.as_field_group }}
+                            {{ webhook_form.url.as_field_group }}
+                            {{ webhook_form.method.as_field_group }}
+                            {{ webhook_form.payload.as_field_group }}
+                            <div
+                                class="formset"
+                                data-formset
+                                data-formset-prefix="{{ webhook_form.header_formset.prefix }}"
+                            >
+                                {{ webhook_form.header_formset.management_form }}
+                                {{ webhook_form.header_formset.non_form_errors }}
+                                <div data-formset-body>
+                                    {% for header_form in webhook_form.header_formset %}
+                                        <div class="header-form form-group row" data-formset-form>
+                                            {% for hidden_field in header_form.hidden_fields %}
+                                                {{ hidden_field }}
+                                            {% endfor %}
+                                            <div class="sr-only">{{ header_form.DELETE }}</div>
+                                            {{ header_form.non_field_errors }}
+                                            <label
+                                                class="col-md-3 col-form-label"
+                                                for="{{ header_form.name.id_for_label }}"
+                                            >
+                                                {% translate "HTTP Header" %}
+                                                <span class="optional">{% translate "Optional" %}</span>
+                                            </label>
+                                            <div class="col-md-9">
+                                                <label
+                                                    class="sr-only"
+                                                    for="{{ header_form.name.id_for_label }}"
+                                                >{{ header_form.name.label }}</label>
+                                                <label
+                                                    class="sr-only"
+                                                    for="{{ header_form.value.id_for_label }}"
+                                                >{{ header_form.value.label }}</label>
+                                                <div class="input-group">
+                                                    {{ header_form.name }}
+                                                    {{ header_form.value }}
+                                                    {% if header_form.instance.pk %}
+                                                        <div class="input-group-append">
+                                                            <button
+                                                                type="button"
+                                                                class="btn btn-danger"
+                                                                data-formset-delete-button
+                                                                title="{% translate "Delete" %}"
+                                                                aria-label="{% translate "Delete" %}"
+                                                            >
+                                                                <i class="fa fa-trash" aria-hidden="true"></i>
+                                                            </button>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                                {% for error in header_form.name.errors %}
+                                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                                {% endfor %}
+                                                {% for error in header_form.value.errors %}
+                                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
                             </div>
-                            {% for error in header_form.name.errors %}
-                                <div class="invalid-feedback d-block">{{ error }}</div>
-                            {% endfor %}
-                            {% for error in header_form.value.errors %}
-                                <div class="invalid-feedback d-block">{{ error }}</div>
-                            {% endfor %}
+                            {% if webhook_form.instance.pk %}
+                                <button
+                                    type="button"
+                                    class="btn btn-danger"
+                                    data-webhook-delete-button
+                                >
+                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                    {% translate "Delete" %}
+                                </button>
+                            {% endif %}
                         </div>
-                    </div>
+                    </details>
                 {% endfor %}
             </div>
         </div>
