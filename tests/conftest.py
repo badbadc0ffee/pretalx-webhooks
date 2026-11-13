@@ -1,6 +1,7 @@
 import datetime as dt
 
 import pytest
+from django.core import management
 from django.core.cache import caches
 from django.utils.timezone import now
 from django_scopes import scopes_disabled
@@ -12,6 +13,11 @@ from pretalx.person.models import User
 from pretalx.schedule.models import Schedule
 
 from pretalx_webhooks.models import WebhookSettings
+
+
+@pytest.fixture(scope="session", autouse=True)
+def collect_static():
+    management.call_command("collectstatic", "--noinput", "--clear", verbosity=0)
 
 
 @pytest.fixture(autouse=True)
