@@ -50,9 +50,8 @@ pretalx writes failed requests and non-success HTTP responses to its log.
 Development
 -----------
 
-Install the development dependencies and run the checks::
+Install `uv`_ and `just`_. Then run the checks::
 
-    python -m pip install -e ".[dev]"
     just fmt-check
     just test
 
@@ -65,3 +64,6 @@ License
 Copyright 2026 Florian Mösch
 
 Released under the terms of the Apache License 2.0
+
+.. _just: https://just.systems/
+.. _uv: https://docs.astral.sh/uv/

@@ -1,3 +1,4 @@
 include LICENSE README.rst pyproject.toml justfile
+include uv.lock
 recursive-include pretalx_webhooks *.py *.html *.css *.js *.po *.mo
 recursive-include tests *.py
