@@ -1,25 +1,67 @@
 pretalx-webhooks
 ================
 
-Call configurable HTTP or HTTPS webhooks for selected pretalx event activity.
+``pretalx-webhooks`` sends HTTP requests for selected pretalx activity log
+entries. Each event can use multiple webhooks.
 
-Install in the pretalx environment::
+Installation
+------------
 
-    pip install /path/to/pretalx-webhooks
+Install the plugin in the same Python environment as pretalx::
+
+    python -m pip install pretalx-webhooks
     python -m pretalx migrate
 
-Restart pretalx. Enable the plugin for the event. Open **Settings → Webhook**.
-For every webhook, select an action and set the URL, GET/POST/PUT, payload,
-and optional HTTP header name/value pairs. The additional empty form creates a
-new webhook when saved. Leave a URL empty to disable that webhook.
+Restart pretalx. In the organiser area, open **Settings → Plugins** and enable
+the plugin for the event.
 
-GET ignores the payload. POST and PUT send the payload as
-UTF-8 text. JSON bodies use application/json. Other bodies use text/plain.
-Event mail placeholders can be used in the payload, for example
-``{"event":"{event_slug}"}``. JSON object braces do not need to be escaped.
-Failed requests are logged.
+Configuration
+-------------
 
-Run tests::
+Open **Settings → Webhook** in the event settings. The page lists all webhooks
+for the event.
 
-    pip install -e ".[dev]"
-    pytest
+Select **Add webhook** to create a webhook. Then configure these fields:
+
+* **Action**: The activity log entry that sends the webhook.
+* **URL**: An HTTP or HTTPS target. An empty URL disables the webhook.
+* **Method**: ``GET``, ``POST``, or ``PUT``.
+* **Payload**: The request body for ``POST`` and ``PUT``.
+* **HTTP Header**: Optional request header names and values.
+
+Select a webhook in the list to edit or delete it.
+
+Payload
+-------
+
+``GET`` does not send a request body. ``POST`` and ``PUT`` send the payload as
+UTF-8 text. A valid JSON payload uses ``application/json``. Other payloads use
+``text/plain`` unless a custom ``Content-Type`` header is present.
+
+The payload supports pretalx event mail placeholders. For example::
+
+    {"event": "{event_slug}"}
+
+JSON object braces do not need escaping. The configuration page shows an error
+for an unknown placeholder.
+
+pretalx writes failed requests and non-success HTTP responses to its log.
+
+Development
+-----------
+
+Install the development dependencies and run the checks::
+
+    python -m pip install -e ".[dev]"
+    just fmt-check
+    just test
+
+Use ``just install-pretalx-local /path/to/pretalx`` to test with a local pretalx
+checkout.
+
+License
+-------
+
+Copyright 2026 Florian Mösch
+
+Released under the terms of the Apache License 2.0
