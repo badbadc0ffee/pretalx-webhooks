@@ -19,6 +19,8 @@ dependencies = []
 dev = [
   "pretalx[dev]",
   "build",
+  "check-manifest",
+  "djangofmt",
   "twine",
   "pytest",
   "pytest-cov",
