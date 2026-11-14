@@ -1,6 +1,14 @@
 pretalx-webhooks
 ================
 
+.. image:: https://img.shields.io/pypi/v/pretalx-webhooks.svg
+   :target: https://pypi.org/project/pretalx-webhooks/
+   :alt: PyPI version
+
+.. image:: https://github.com/badbadc0ffee/pretalx-webhooks/actions/workflows/checks.yml/badge.svg
+   :target: https://github.com/badbadc0ffee/pretalx-webhooks/actions/workflows/checks.yml
+   :alt: Checks
+
 ``pretalx-webhooks`` sends HTTP requests for selected pretalx activity log
 entries. Each event can use multiple webhooks.
 

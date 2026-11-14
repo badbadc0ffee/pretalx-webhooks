@@ -15,6 +15,11 @@ maintainers = [
 requires-python = ">=3.13"
 dependencies = []
 
+[project.urls]
+homepage = "https://github.com/badbadc0ffee/pretalx-webhooks"
+repository = "https://github.com/badbadc0ffee/pretalx-webhooks.git"
+issues = "https://github.com/badbadc0ffee/pretalx-webhooks/issues"
+
 [project.optional-dependencies]
 dev = [
   "pretalx[dev]",
