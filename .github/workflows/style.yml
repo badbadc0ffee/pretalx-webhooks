@@ -1,0 +1,57 @@
+name: Code Style
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "pretalx_webhooks/locale/**"
+      - "pretalx_webhooks/static/**"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "pretalx_webhooks/locale/**"
+      - "pretalx_webhooks/static/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  style:
+    name: Code style
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: ".github/workflows/python-version.txt"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - uses: extractions/setup-just@v4
+      - name: Run linters
+        run: just fmt-check
+
+  packaging:
+    name: Packaging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: ".github/workflows/python-version.txt"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - uses: extractions/setup-just@v4
+      - name: Check package manifest
+        run: just check-manifest
+      - name: Build package
+        run: uv run --extra=dev python -m build
+      - name: Check package
+        run: uv run --extra=dev python -m twine check dist/*

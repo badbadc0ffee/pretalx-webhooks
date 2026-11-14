@@ -5,9 +5,9 @@ pretalx-webhooks
    :target: https://pypi.org/project/pretalx-webhooks/
    :alt: PyPI version
 
-.. image:: https://github.com/badbadc0ffee/pretalx-webhooks/actions/workflows/checks.yml/badge.svg
-   :target: https://github.com/badbadc0ffee/pretalx-webhooks/actions/workflows/checks.yml
-   :alt: Checks
+.. image:: https://github.com/badbadc0ffee/pretalx-webhooks/actions/workflows/tests.yml/badge.svg
+   :target: https://github.com/badbadc0ffee/pretalx-webhooks/actions/workflows/tests.yml
+   :alt: Tests
 
 ``pretalx-webhooks`` sends HTTP requests for selected pretalx activity log
 entries. Each event can use multiple webhooks.
