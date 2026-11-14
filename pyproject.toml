@@ -45,7 +45,7 @@ version = {attr = "pretalx_webhooks.__version__"}
 include = ["pretalx*"]
 
 [tool.check-manifest]
-ignore = [".*", "justfile"]
+ignore = [".*", "tests/*"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "tests.settings"
